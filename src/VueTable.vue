@@ -33,6 +33,9 @@
 <script>
 
 export default {
+	props: {
+		items: Array
+	},
 	data() {
 		return {
 			templatesOrder: [
