@@ -6,9 +6,9 @@
 					filters
 				</div>
 			</slot>
-			<slot v-if="template === 'pagination_top'" name="pagination_top">
+			<slot v-if="template === 'pagination'" name="pagination_top">
 				<div>			
-					pagination_top
+					pagination
 				</div>			
 			</slot>
 			<slot v-if="template === 'mass_operations'" name="mass_operations">
@@ -21,39 +21,77 @@
 					list
 				</div>			
 			</slot>
-			<slot v-if="template === 'pagination_bottom'" name="pagination_bottom">
-				<div>			
-					pagination_bottom
-				</div>			
-			</slot>
 		</div>
 	</div>
 </template>
 
 <script>
 
+import axios from 'axios';
+
 export default {
 	props: {
-		items: Array
+		id: String,
+		syncUrl: String,
+		filterComponents: {
+			type: Array,
+			default: () => {return [];}
+		},
+		cellComponents: {
+			type: Array,
+			default: () => {return [];}
+		},
+		massOperationComponents: {
+			type: Array,
+			default: () => {return [];}
+		},
+		templatesOrder: {
+			type: Array,
+			default: () => {
+				return [
+					'filters',
+					'mass_operations',
+					'pagination',
+					'list',
+					'pagination'
+				];
+			}
+		}
 	},
 	data() {
 		return {
-			templatesOrder: [
-				'filters',
-				'mass_operations',
-				'pagination_top',
-				'list',
-				'pagination_bottom'
-			],
-			hello: 'world'
+			filters: {},
+			massOperations: {},
+			items: [],
+			pagination: {
+				page: 1,
+				itemsPerPage: 10,
+				total: 10,
+			}
 		}
+	},
+	mounted() {
+		this.loadList();
 	},
 	methods: {
 		/**
 		 * Загрузить список
 		 */
 		loadList(paginatorInstance, filtersSet, sortInstance) {
-			
+			if (!this.syncUrl) {
+				throw new Error('SyncUrl should be specified');
+			}
+
+			axios.post(this.syncUrl, {
+				pagination: this.pagination,
+				filters: this.filters,
+				mass_operations: this.massOperations
+			}).then((response) => {
+				this.items = response.data.items;
+				this.$forceUpdate();
+			}).catch((response) => {
+
+			});
 		},
 		/**
 		 * Применить массовые операции
