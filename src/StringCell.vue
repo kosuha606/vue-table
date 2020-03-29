@@ -1,6 +1,11 @@
 <template>
     <td>
-        {{ value }}
+        <a v-if="$attrs.props && $attrs.props.link" :href="$attrs.props.link(item)">
+            {{ item[field] }}
+        </a>
+        <span v-else>
+            {{ item[field] }}
+        </span>
     </td>
 </template>
 
@@ -8,7 +13,9 @@
     export default {
         name: "StringCell",
         props: {
-            value: String
+            value: String,
+            item: Object,
+            field: String,
         }
     }
 </script>

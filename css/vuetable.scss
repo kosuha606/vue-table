@@ -1,0 +1,30 @@
+
+.vue-table {
+
+  .table {
+    width: 100%;
+
+    th,
+    td {
+      text-align: left;
+      border: solid 1px #000;
+      padding: 5px;
+    }
+  }
+
+  .pagination {
+    padding: 0;
+    display: block;
+
+    &-wrapper {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    &-item {
+      display: inline-block;
+    }
+  }
+}

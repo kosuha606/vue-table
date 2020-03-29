@@ -1,0 +1,11 @@
+{
+    "name": "vagrant/vue-table",
+
+    "autoload": {
+        "psr-4": {
+            "app\\": "app/"
+        }
+    },
+
+    "require": {}
+}

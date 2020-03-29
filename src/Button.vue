@@ -1,7 +1,7 @@
 <template>
     <div>
         <button>
-            {{ label }}
+            {{ $attrs.props.label }}
         </button>
     </div>
 </template>
@@ -9,9 +9,6 @@
 <script>
     export default {
         name: "Button",
-        props: {
-            label: String,
-        }
     }
 </script>
 
