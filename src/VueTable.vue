@@ -8,6 +8,7 @@
 							v-model="filters[component.field]"
 							:key="'mass_'+component.field"
 							:is="component.component"
+							:label="component.label"
 							:props="component.props"
 							v-for="component in filterComponents"
 					></component>
@@ -26,7 +27,7 @@
 							<li class="pagination-item">
 								<button @click="pagination.prevPage()" type="button">Назад</button>
 							</li>
-							<li class="pagination-item" v-for="page in helpers.range(1, pagination.pagesCount())">
+							<li :class="{'pagination-item':1, 'pagination-item__active': page == pagination.page}" v-for="page in helpers.range(1, pagination.pagesCount())">
 								<button @click="pagination.gotoPage(page)" type="button">
 									{{ page }}
 								</button>
@@ -56,6 +57,7 @@
 					<hr>
 					<h3>Операции</h3>
 					<component
+							:mass-operations="massOperations"
 							:key="'mass_'+component.field"
 							:is="component.component"
 							:props="component.props"
@@ -83,23 +85,36 @@
 									v-for="component in cellComponents">
 									{{ component.label }}
 									<div v-if="component.field" class="table-sort">
-										<button type="button">&uarr;</button>
-										<button type="button">&darr;</button>
+										<button :class="{'table-sort-active': (sort.field == component.field) && (sort.direction == 'desc')}" @click="onSort(component.field, 'desc')" type="button">&uarr;</button>
+										<button :class="{'table-sort-active': (sort.field == component.field) && (sort.direction == 'asc')}" @click="onSort(component.field, 'asc')" type="button">&darr;</button>
 									</div>
 								</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="(item, index) in items">
-								<component
-										@change="onMassComponentChanged($event, component)"
-										:key="index+'_'+component.field"
-										:is="component.component"
-										:field="component.field"
-										:props="component.props"
-										:item="item"
-										v-for="component in cellComponents"
-								></component>
+								<template v-for="component in cellComponents">
+									<component
+											v-if="component.massOperation"
+											@mass-select="onMassComponentSelect($event, component)"
+											@mass-unselect="onMassComponentUnselect($event, component)"
+											:key="index+'_'+component.field"
+											:mass-operations="massOperations"
+											:component="component"
+											:is="component.component"
+											:field="component.field"
+											:props="component.props"
+											:item="item"
+									></component>
+									<component
+											v-else
+											:key="index+'_'+component.field"
+											:is="component.component"
+											:field="component.field"
+											:props="component.props"
+											:item="item"
+									></component>
+								</template>
 							</tr>
 						</tbody>
 					</table>
@@ -116,6 +131,7 @@ import StringCell from "./StringCell";
 import FilterInput from "./FilterInput";
 import Button from "./Button";
 import CheckboxCell from "./CheckboxCell";
+import SumSelectedButton from "./SumSelectedButton";
 
 const defaultItemsPerPageVariants = [10, 20, 30, 40, 50];
 const defaultItemsPerPage = 10;
@@ -145,6 +161,7 @@ export default {
 		FilterInput,
 		Button,
 		CheckboxCell,
+		SumSelectedButton,
 	},
 	props: {
 		id: String,
@@ -203,6 +220,10 @@ export default {
 			massOperations: {},
 			items: [],
 			itemsTotal: 10,
+			sort: {
+				field: 'id',
+				direction: 'asc',
+			},
 			pagination: {
 				page: 1,
 				itemsPerPage: defaultItemsPerPage,
@@ -264,7 +285,8 @@ export default {
 			return  {
 				pagination: this.pagination,
 				filters: this.filters,
-				mass_operations: this.massOperations
+				mass_operations: this.massOperations,
+				sort: this.sort,
 			};
 		},
 	},
@@ -276,6 +298,24 @@ export default {
 		this.loadList();
 	},
 	methods: {
+		onSort(field, direction) {
+			this.sort = {
+				field: field,
+				direction: direction,
+			};
+			this.$forceUpdate();
+		},
+		onMassComponentSelect(value, component) {
+			if (!this.massOperations[component.massOperation]) {
+				this.massOperations[component.massOperation] = {};
+			}
+			this.massOperations[component.massOperation][value] = value;
+			this.$forceUpdate();
+		},
+		onMassComponentUnselect(value, component) {
+			delete(this.massOperations[component.massOperation][value]);
+			this.$forceUpdate();
+		},
 		onMassComponentChanged(e, component) {
 			if (!component.massOperation) {
 				return;
@@ -337,6 +377,9 @@ export default {
 			if (!parsedUrl.searchParams.get(this.id)) {
 				return;
 			}
+			if (!this.$cookie) {
+				return;
+			}
 			let state = this.$cookie.get(this.cookieKey);
 			if (!state) {
 				return;
@@ -346,6 +389,7 @@ export default {
 			this.pagination.page = state.pagination.page;
 			this.pagination.itemsPerPage = state.pagination.itemsPerPage;
 			this.filters = state.filters;
+			this.sort = state.sort;
 			this.mass_operations = state.mass_operations;
 		},
 	}

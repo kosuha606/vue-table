@@ -1962,9 +1962,31 @@ __webpack_require__.r(__webpack_exports__);
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "CheckboxCell",
+  props: ['massOperations', 'component'],
+  data: function data() {
+    return {
+      checked: false
+    };
+  },
+  mounted: function mounted() {
+    this.checked = this.isChecked();
+  },
   methods: {
     onChange: function onChange(e) {
-      this.$emit('change', e.target.value);
+      if (e.target.checked) {
+        this.$emit('mass-select', this.$attrs.item.id);
+      } else {
+        this.$emit('mass-unselect', this.$attrs.item.id);
+      }
+    },
+    isChecked: function isChecked() {
+      if (this.massOperations[this.component.massOperation]) {
+        if (this.massOperations[this.component.massOperation][this.$attrs.item.id]) {
+          return true;
+        }
+      }
+
+      return false;
     }
   }
 });
@@ -1986,8 +2008,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "FilterInput",
+  props: ['value', 'label'],
   methods: {
     onChange: function onChange(e) {
       this.$emit('input', e.target.value);
@@ -2028,6 +2054,41 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./src/SumSelectedButton.vue?vue&type=script&lang=js&":
+/*!********************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./src/SumSelectedButton.vue?vue&type=script&lang=js& ***!
+  \********************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "SumSelectedButton",
+  props: ['massOperations'],
+  methods: {
+    calc: function calc() {
+      if (!this.massOperations.selected) {
+        alert('Ничего не выбрано');
+        return;
+      }
+
+      var ids = Object.keys(this.massOperations.selected);
+      alert('Выбраны: ' + ids.join(','));
+    }
+  }
+});
+
+/***/ }),
+
 /***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./src/VueTable.vue?vue&type=script&lang=js&":
 /*!***********************************************************************************************************************************************!*\
   !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./src/VueTable.vue?vue&type=script&lang=js& ***!
@@ -2045,6 +2106,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _FilterInput__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./FilterInput */ "./src/FilterInput.vue");
 /* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Button */ "./src/Button.vue");
 /* harmony import */ var _CheckboxCell__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./CheckboxCell */ "./src/CheckboxCell.vue");
+/* harmony import */ var _SumSelectedButton__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./SumSelectedButton */ "./src/SumSelectedButton.vue");
 
 //
 //
@@ -2157,6 +2219,22 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 
 
@@ -2210,7 +2288,8 @@ var helpers = {
     StringCell: _StringCell__WEBPACK_IMPORTED_MODULE_2__["default"],
     FilterInput: _FilterInput__WEBPACK_IMPORTED_MODULE_3__["default"],
     Button: _Button__WEBPACK_IMPORTED_MODULE_4__["default"],
-    CheckboxCell: _CheckboxCell__WEBPACK_IMPORTED_MODULE_5__["default"]
+    CheckboxCell: _CheckboxCell__WEBPACK_IMPORTED_MODULE_5__["default"],
+    SumSelectedButton: _SumSelectedButton__WEBPACK_IMPORTED_MODULE_6__["default"]
   },
   props: {
     id: String,
@@ -2270,6 +2349,10 @@ var helpers = {
       massOperations: {},
       items: [],
       itemsTotal: 10,
+      sort: {
+        field: 'id',
+        direction: 'asc'
+      },
       pagination: {
         page: 1,
         itemsPerPage: defaultItemsPerPage,
@@ -2334,7 +2417,8 @@ var helpers = {
       return {
         pagination: this.pagination,
         filters: this.filters,
-        mass_operations: this.massOperations
+        mass_operations: this.massOperations,
+        sort: this.sort
       };
     }
   },
@@ -2346,6 +2430,25 @@ var helpers = {
     this.loadList();
   },
   methods: {
+    onSort: function onSort(field, direction) {
+      this.sort = {
+        field: field,
+        direction: direction
+      };
+      this.$forceUpdate();
+    },
+    onMassComponentSelect: function onMassComponentSelect(value, component) {
+      if (!this.massOperations[component.massOperation]) {
+        this.massOperations[component.massOperation] = {};
+      }
+
+      this.massOperations[component.massOperation][value] = value;
+      this.$forceUpdate();
+    },
+    onMassComponentUnselect: function onMassComponentUnselect(value, component) {
+      delete this.massOperations[component.massOperation][value];
+      this.$forceUpdate();
+    },
     onMassComponentChanged: function onMassComponentChanged(e, component) {
       if (!component.massOperation) {
         return;
@@ -2415,6 +2518,10 @@ var helpers = {
         return;
       }
 
+      if (!this.$cookie) {
+        return;
+      }
+
       var state = this.$cookie.get(this.cookieKey);
 
       if (!state) {
@@ -2426,6 +2533,7 @@ var helpers = {
       this.pagination.page = state.pagination.page;
       this.pagination.itemsPerPage = state.pagination.itemsPerPage;
       this.filters = state.filters;
+      this.sort = state.sort;
       this.mass_operations = state.mass_operations;
     }
   }
@@ -3897,7 +4005,11 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("td", [
-    _c("input", { attrs: { type: "checkbox" }, on: { change: _vm.onChange } })
+    _c("input", {
+      attrs: { type: "checkbox" },
+      domProps: { checked: _vm.checked },
+      on: { change: _vm.onChange }
+    })
   ])
 }
 var staticRenderFns = []
@@ -3923,7 +4035,15 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _c("input", { attrs: { type: "text" }, on: { change: _vm.onChange } })
+    _c("label", { attrs: { for: "" } }, [
+      _vm._v("\n        " + _vm._s(_vm.label) + "\n    ")
+    ]),
+    _vm._v(" "),
+    _c("input", {
+      attrs: { type: "text" },
+      domProps: { value: _vm.value },
+      on: { change: _vm.onChange }
+    })
   ])
 }
 var staticRenderFns = []
@@ -3956,6 +4076,34 @@ var render = function() {
       : _c("span", [
           _vm._v("\n        " + _vm._s(_vm.item[_vm.field]) + "\n    ")
         ])
+  ])
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true&":
+/*!************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true& ***!
+  \************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", [
+    _c("button", { on: { click: _vm.calc } }, [
+      _vm._v("\n        " + _vm._s(_vm.$attrs.props.label) + "\n    ")
+    ])
   ])
 }
 var staticRenderFns = []
@@ -3998,7 +4146,10 @@ var render = function() {
                       return _c(component.component, {
                         key: "mass_" + component.field,
                         tag: "component",
-                        attrs: { props: component.props },
+                        attrs: {
+                          label: component.label,
+                          props: component.props
+                        },
                         model: {
                           value: _vm.filters[component.field],
                           callback: function($$v) {
@@ -4070,7 +4221,13 @@ var render = function() {
                               function(page) {
                                 return _c(
                                   "li",
-                                  { staticClass: "pagination-item" },
+                                  {
+                                    class: {
+                                      "pagination-item": 1,
+                                      "pagination-item__active":
+                                        page == _vm.pagination.page
+                                    }
+                                  },
                                   [
                                     _c(
                                       "button",
@@ -4204,7 +4361,10 @@ var render = function() {
                       return _c(component.component, {
                         key: "mass_" + component.field,
                         tag: "component",
-                        attrs: { props: component.props }
+                        attrs: {
+                          "mass-operations": _vm.massOperations,
+                          props: component.props
+                        }
                       })
                     })
                   ],
@@ -4263,13 +4423,45 @@ var render = function() {
                                     ? _c("div", { staticClass: "table-sort" }, [
                                         _c(
                                           "button",
-                                          { attrs: { type: "button" } },
+                                          {
+                                            class: {
+                                              "table-sort-active":
+                                                _vm.sort.field ==
+                                                  component.field &&
+                                                _vm.sort.direction == "desc"
+                                            },
+                                            attrs: { type: "button" },
+                                            on: {
+                                              click: function($event) {
+                                                return _vm.onSort(
+                                                  component.field,
+                                                  "desc"
+                                                )
+                                              }
+                                            }
+                                          },
                                           [_vm._v("↑")]
                                         ),
                                         _vm._v(" "),
                                         _c(
                                           "button",
-                                          { attrs: { type: "button" } },
+                                          {
+                                            class: {
+                                              "table-sort-active":
+                                                _vm.sort.field ==
+                                                  component.field &&
+                                                _vm.sort.direction == "asc"
+                                            },
+                                            attrs: { type: "button" },
+                                            on: {
+                                              click: function($event) {
+                                                return _vm.onSort(
+                                                  component.field,
+                                                  "asc"
+                                                )
+                                              }
+                                            }
+                                          },
                                           [_vm._v("↓")]
                                         )
                                       ])
@@ -4286,26 +4478,49 @@ var render = function() {
                           _vm._l(_vm.items, function(item, index) {
                             return _c(
                               "tr",
-                              _vm._l(_vm.cellComponents, function(component) {
-                                return _c(component.component, {
-                                  key: index + "_" + component.field,
-                                  tag: "component",
-                                  attrs: {
-                                    field: component.field,
-                                    props: component.props,
-                                    item: item
-                                  },
-                                  on: {
-                                    change: function($event) {
-                                      return _vm.onMassComponentChanged(
-                                        $event,
-                                        component
-                                      )
-                                    }
-                                  }
+                              [
+                                _vm._l(_vm.cellComponents, function(component) {
+                                  return [
+                                    component.massOperation
+                                      ? _c(component.component, {
+                                          key: index + "_" + component.field,
+                                          tag: "component",
+                                          attrs: {
+                                            "mass-operations":
+                                              _vm.massOperations,
+                                            component: component,
+                                            field: component.field,
+                                            props: component.props,
+                                            item: item
+                                          },
+                                          on: {
+                                            "mass-select": function($event) {
+                                              return _vm.onMassComponentSelect(
+                                                $event,
+                                                component
+                                              )
+                                            },
+                                            "mass-unselect": function($event) {
+                                              return _vm.onMassComponentUnselect(
+                                                $event,
+                                                component
+                                              )
+                                            }
+                                          }
+                                        })
+                                      : _c(component.component, {
+                                          key: index + "_" + component.field,
+                                          tag: "component",
+                                          attrs: {
+                                            field: component.field,
+                                            props: component.props,
+                                            item: item
+                                          }
+                                        })
+                                  ]
                                 })
-                              }),
-                              1
+                              ],
+                              2
                             )
                           }),
                           0
@@ -16729,6 +16944,75 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/SumSelectedButton.vue":
+/*!***********************************!*\
+  !*** ./src/SumSelectedButton.vue ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true& */ "./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true&");
+/* harmony import */ var _SumSelectedButton_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./SumSelectedButton.vue?vue&type=script&lang=js& */ "./src/SumSelectedButton.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _SumSelectedButton_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "2a66da2f",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "src/SumSelectedButton.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./src/SumSelectedButton.vue?vue&type=script&lang=js&":
+/*!************************************************************!*\
+  !*** ./src/SumSelectedButton.vue?vue&type=script&lang=js& ***!
+  \************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_SumSelectedButton_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../node_modules/babel-loader/lib??ref--4-0!../node_modules/vue-loader/lib??vue-loader-options!./SumSelectedButton.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./src/SumSelectedButton.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_SumSelectedButton_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true&":
+/*!******************************************************************************!*\
+  !*** ./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true& ***!
+  \******************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../node_modules/vue-loader/lib??vue-loader-options!./SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./src/SumSelectedButton.vue?vue&type=template&id=2a66da2f&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_SumSelectedButton_vue_vue_type_template_id_2a66da2f_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
 /***/ "./src/VueTable.vue":
 /*!**************************!*\
   !*** ./src/VueTable.vue ***!
@@ -16813,17 +17097,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StringCell__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./StringCell */ "./src/StringCell.vue");
 /* harmony import */ var vue_cookie__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vue-cookie */ "./node_modules/vue-cookie/src/vue-cookie.js");
 /* harmony import */ var vue_cookie__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(vue_cookie__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _SumSelectedButton__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./SumSelectedButton */ "./src/SumSelectedButton.vue");
+
 
 
 
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.component('string-cell', _StringCell__WEBPACK_IMPORTED_MODULE_2__["default"]);
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vue_cookie__WEBPACK_IMPORTED_MODULE_3___default.a);
+vue__WEBPACK_IMPORTED_MODULE_0___default.a.component('SumSelectedButton', _SumSelectedButton__WEBPACK_IMPORTED_MODULE_4__["default"]);
 var app = new vue__WEBPACK_IMPORTED_MODULE_0___default.a({
   el: '#app',
   components: {
     VueTable: _VueTable__WEBPACK_IMPORTED_MODULE_1__["default"],
-    StringCell: _StringCell__WEBPACK_IMPORTED_MODULE_2__["default"]
+    StringCell: _StringCell__WEBPACK_IMPORTED_MODULE_2__["default"],
+    SumSelectedButton: _SumSelectedButton__WEBPACK_IMPORTED_MODULE_4__["default"]
   },
   data: function data() {
     return {};

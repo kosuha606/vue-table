@@ -46,7 +46,6 @@ function lines($string) {
             <a href="#header-four">Пагинация показать еще</a>
         </li>
     </ul>
-    <button @click="test">Test</button>
 <h2 id="header-one">Полная таблица, шаблон по умолчанию</h2>
 <?php ob_start(); ?>
 <vue-table
@@ -62,8 +61,8 @@ function lines($string) {
     :mass-operation-components="[
     {
         operation: 'operationName',
-        component: 'Button',
-        props: {label: 'Сумма выбранных'}
+        component: 'SumSelectedButton',
+        props: {label: 'Показать выбранные'}
     }
     ]"
     :cell-components="[
