@@ -32,7 +32,22 @@ function lines($string) {
 <div id="app" class="container">
 <h1 class="text-center">vue-table, примеры</h1>
 <p>&nbsp;</p>
-<h2>Полная таблица, шаблон по умолчанию</h2>
+    <ul>
+        <li>
+            <a href="#header-one">Полная таблица, шаблон по умолчанию</a>
+        </li>
+        <li>
+            <a href="#header-two">Кастомизация шаблонов</a>
+        </li>
+        <li>
+            <a href="#header-three">Измененный порядок вывода шаблонов</a>
+        </li>
+        <li>
+            <a href="#header-four">Пагинация показать еще</a>
+        </li>
+    </ul>
+    <button @click="test">Test</button>
+<h2 id="header-one">Полная таблица, шаблон по умолчанию</h2>
 <?php ob_start(); ?>
 <vue-table
     id="first"
@@ -55,6 +70,7 @@ function lines($string) {
     {
         label: '#',
         component: 'CheckboxCell',
+        massOperation: 'selected',
         attrs: {
             width: '1%'
         }
@@ -93,7 +109,7 @@ $one = ob_get_clean();
 <?= lines(htmlentities($one)) ?>
  </code>
 </pre>
-<h2>Кастомизация шаблонов</h2>
+<h2 id="header-two">Кастомизация шаблонов</h2>
 <?php ob_start(); ?>
 <vue-table
     id="second"
@@ -131,13 +147,13 @@ $one = ob_get_clean();
 <?= lines(htmlentities($one)) ?>
  </code>
 </pre>
-<h2>Измененный порядок вывода шаблонов</h2>
-<?php ob_start(); ?>
-<vue-table
-    id="third"
-    :sync-url="'/api.php'"
-    :templates-order="['filters', 'list',  'pagination']"
-    :cell-components="[
+    <h2 id="header-three">Измененный порядок вывода шаблонов</h2>
+    <?php ob_start(); ?>
+    <vue-table
+            id="third"
+            :sync-url="'/api.php'"
+            :templates-order="['filters', 'list',  'pagination']"
+            :cell-components="[
     {
         field: 'id',
         label: 'ID',
@@ -159,12 +175,51 @@ $one = ob_get_clean();
         component: 'string-cell'
     }
     ]"
-></vue-table><?php
-$one = ob_get_clean();
-?>
-<?= $one ?>
-<h3>Исходный код:</h3>
-<pre class="code">
+    ></vue-table><?php
+    $one = ob_get_clean();
+    ?>
+    <?= $one ?>
+    <h3>Исходный код:</h3>
+    <pre class="code">
+<code class="html">
+<?= lines(htmlentities($one)) ?>
+</code>
+</pre>
+    <h2 id="header-four">Пагинация показать еще</h2>
+    <?php ob_start(); ?>
+    <vue-table
+        id="appendpagination"
+        :sync-url="'/api.php'"
+        :pagination-append-mode="true"
+        :templates-order="['list',  'pagination']"
+        :cell-components="[
+    {
+        field: 'id',
+        label: 'ID',
+        component: 'string-cell'
+    },
+    {
+        field: 'name',
+        label: 'Название',
+        component: 'string-cell'
+    },
+    {
+        field: 'price',
+        label: 'Цена',
+        component: 'string-cell'
+    },
+    {
+        field: 'qty',
+        label: 'Кол-во',
+        component: 'string-cell'
+    }
+    ]"
+    ></vue-table><?php
+    $one = ob_get_clean();
+    ?>
+    <?= $one ?>
+    <h3>Исходный код:</h3>
+    <pre class="code">
 <code class="html">
 <?= lines(htmlentities($one)) ?>
 </code>

@@ -7,6 +7,7 @@ require_once __DIR__.'/vendor/autoload.php';
 $limit = 0;
 $offset = 0;
 
+$_POST = json_decode(file_get_contents('php://input'), true);
 $pagination = $_POST['pagination'] ?? ['page' => 1, 'itemsPerPage' => 10];
 
 $limit = $pagination['itemsPerPage'];

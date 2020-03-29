@@ -1961,7 +1961,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
-  name: "CheckboxCell"
+  name: "CheckboxCell",
+  methods: {
+    onChange: function onChange(e) {
+      this.$emit('change', e.target.value);
+    }
+  }
 });
 
 /***/ }),
@@ -1982,7 +1987,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
-  name: "FilterInput"
+  name: "FilterInput",
+  methods: {
+    onChange: function onChange(e) {
+      this.$emit('input', e.target.value);
+    }
+  }
 });
 
 /***/ }),
@@ -2136,32 +2146,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
 
 
-var pagination = {
-  page: 1,
-  itemsPerPage: 10,
-  itemsPerPageVariants: [10, 20, 30, 40, 50],
-  total: 10,
-  appendMode: false,
-  getOffsetBegin: function getOffsetBegin() {
-    return (this.page - 1) * this.itemsPerPage;
-  },
-  getOffsetEnd: function getOffsetEnd() {
-    return this.page * this.itemsPerPage;
-  },
-  pagesCount: function pagesCount() {
-    return Math.round(this.total / this.itemsPerPage);
-  },
-  gotoEnd: function gotoEnd() {},
-  gotoBegint: function gotoBegint() {},
-  gotoPage: function gotoPage() {},
-  nextPage: function nextPage() {},
-  prevPage: function prevPage() {}
-};
+var defaultItemsPerPageVariants = [10, 20, 30, 40, 50];
+var defaultItemsPerPage = 10;
 var helpers = {
   range: /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function range(lorange, hirange) {
     var n;
@@ -2190,7 +2192,18 @@ var helpers = {
         }
       }
     }, range);
-  })
+  }),
+  addParamToUrl: function addParamToUrl(paramStr) {
+    var result = '';
+
+    if (location.search === "") {
+      result = location.href + "?" + paramStr;
+    } else {
+      result = location.href + "&" + paramStr;
+    }
+
+    return result;
+  }
 };
 /* harmony default export */ __webpack_exports__["default"] = ({
   components: {
@@ -2204,16 +2217,16 @@ var helpers = {
     syncUrl: String,
     paginationAppendMode: {
       type: Boolean,
-      "default": pagination.appendMode
+      "default": false
     },
     itemsPerPage: {
       type: Number,
-      "default": pagination.itemsPerPage
+      "default": defaultItemsPerPage
     },
     itemsPerPageVariants: {
       type: Array,
       "default": function _default() {
-        return pagination.itemsPerPageVariants;
+        return defaultItemsPerPageVariants;
       }
     },
     filterComponents: {
@@ -2241,21 +2254,109 @@ var helpers = {
       }
     }
   },
+  watch: {
+    listState: {
+      handler: function handler() {
+        this.loadList();
+      },
+      deep: true
+    }
+  },
   data: function data() {
+    var vm = this;
     return {
+      isLoading: false,
       filters: {},
       massOperations: {},
       items: [],
-      pagination: pagination,
+      itemsTotal: 10,
+      pagination: {
+        page: 1,
+        itemsPerPage: defaultItemsPerPage,
+        itemsPerPageVariants: defaultItemsPerPageVariants,
+        total: 10,
+        appendMode: false,
+        getTotal: function getTotal() {
+          return vm.itemsTotal;
+        },
+        getOffsetBegin: function getOffsetBegin() {
+          return (this.page - 1) * this.itemsPerPage;
+        },
+        getOffsetEnd: function getOffsetEnd() {
+          var possibleEnd = this.page * this.itemsPerPage;
+
+          if (possibleEnd > this.getTotal()) {
+            return this.getTotal();
+          }
+
+          return possibleEnd;
+        },
+        pagesCount: function pagesCount() {
+          return Math.round(this.getTotal() / this.itemsPerPage + 0.5);
+        },
+        gotoEnd: function gotoEnd() {
+          this.page = this.pagesCount();
+          vm.$forceUpdate();
+        },
+        gotoBegin: function gotoBegin() {
+          this.page = 1;
+          vm.$forceUpdate();
+        },
+        gotoPage: function gotoPage(page) {
+          this.page = page;
+          vm.$forceUpdate();
+        },
+        nextPage: function nextPage() {
+          if (this.page >= this.pagesCount()) {
+            return;
+          }
+
+          this.page = this.page + 1;
+          vm.$forceUpdate();
+        },
+        prevPage: function prevPage() {
+          if (this.page <= 1) {
+            return;
+          }
+
+          this.page = this.page - 1;
+          vm.$forceUpdate();
+        }
+      },
       helpers: helpers
     };
+  },
+  computed: {
+    cookieKey: function cookieKey() {
+      return 'vue-table-' + this.id;
+    },
+    listState: function listState() {
+      return {
+        pagination: this.pagination,
+        filters: this.filters,
+        mass_operations: this.massOperations
+      };
+    }
   },
   mounted: function mounted() {
     this.pagination.itemsPerPage = this.itemsPerPage;
     this.pagination.itemsPerPageVariants = this.itemsPerPageVariants;
+    this.pagination.appendMode = this.paginationAppendMode;
+    this.unserializeStateFromUrl();
     this.loadList();
   },
   methods: {
+    onMassComponentChanged: function onMassComponentChanged(e, component) {
+      if (!component.massOperation) {
+        return;
+      }
+
+      if (this.massOperations[component.massOperation]) {
+        this.massOperations[component.massOperation].push(e);
+      } else {
+        this.massOperations[component.massOperation] = [e];
+      }
+    },
     printComponentAttrs: function printComponentAttrs(component) {
       return 'hhh';
     },
@@ -2270,16 +2371,18 @@ var helpers = {
         throw new Error('SyncUrl should be specified');
       }
 
-      axios__WEBPACK_IMPORTED_MODULE_1___default.a.post(this.syncUrl, {
-        pagination: this.pagination,
-        filters: this.filters,
-        mass_operations: this.massOperations
-      }).then(function (response) {
+      this.isLoading = true;
+      axios__WEBPACK_IMPORTED_MODULE_1___default.a.post(this.syncUrl, this.listState).then(function (response) {
         _this.items = response.data.items;
-        _this.pagination.total = response.data.total;
+        _this.isLoading = false;
+        _this.itemsTotal = response.data.total;
 
         _this.$forceUpdate();
-      })["catch"](function (response) {});
+
+        _this.serializeStateToUrl();
+      })["catch"](function (response) {
+        _this.isLoading = false;
+      });
     },
 
     /**
@@ -2295,12 +2398,36 @@ var helpers = {
     /**
      * Сохранить состояние в урл
      */
-    serializeStateToUrl: function serializeStateToUrl(paginatorInstance, filterData, SortInstance, massOperationsData) {},
+    serializeStateToUrl: function serializeStateToUrl() {
+      var parsedUrl = new URL(window.location.href);
+      parsedUrl.searchParams.set(this.id, 'hold');
+      window.history.pushState({}, '', parsedUrl.href);
+      this.$cookie.set(this.cookieKey, JSON.stringify(this.listState));
+    },
 
     /**
      * Восстановить состояние из урл
      */
-    unserializeStateFromUrl: function unserializeStateFromUrl() {}
+    unserializeStateFromUrl: function unserializeStateFromUrl() {
+      var parsedUrl = new URL(window.location.href);
+
+      if (!parsedUrl.searchParams.get(this.id)) {
+        return;
+      }
+
+      var state = this.$cookie.get(this.cookieKey);
+
+      if (!state) {
+        return;
+      }
+
+      console.log(state);
+      state = JSON.parse(state);
+      this.pagination.page = state.pagination.page;
+      this.pagination.itemsPerPage = state.pagination.itemsPerPage;
+      this.filters = state.filters;
+      this.mass_operations = state.mass_operations;
+    }
   }
 });
 
@@ -3514,6 +3641,218 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 
 /***/ }),
 
+/***/ "./node_modules/tiny-cookie/tiny-cookie.js":
+/*!*************************************************!*\
+  !*** ./node_modules/tiny-cookie/tiny-cookie.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * tiny-cookie - A tiny cookie manipulation plugin
+ * https://github.com/Alex1990/tiny-cookie
+ * Under the MIT license | (c) Alex Chao
+ */
+
+!(function(root, factory) {
+
+  // Uses CommonJS, AMD or browser global to create a jQuery plugin.
+  // See: https://github.com/umdjs/umd
+  if (true) {
+    // Expose this plugin as an AMD module. Register an anonymous module.
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+				__WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else {}
+
+}(this, function() {
+
+  'use strict';
+
+  // The public function which can get/set/remove cookie.
+  function Cookie(key, value, opts) {
+    if (value === void 0) {
+      return Cookie.get(key);
+    } else if (value === null) {
+      Cookie.remove(key);
+    } else {
+      Cookie.set(key, value, opts);
+    }
+  }
+
+  // Check if the cookie is enabled.
+  Cookie.enabled = function() {
+    var key = '__test_key';
+    var enabled;
+
+    document.cookie = key + '=1';
+    enabled = !!document.cookie;
+
+    if (enabled) Cookie.remove(key);
+
+    return enabled;
+  };
+
+  // Get the cookie value by the key.
+  Cookie.get = function(key, raw) {
+    if (typeof key !== 'string' || !key) return null;
+
+    key = '(?:^|; )' + escapeRe(key) + '(?:=([^;]*?))?(?:;|$)';
+
+    var reKey = new RegExp(key);
+    var res = reKey.exec(document.cookie);
+
+    return res !== null ? (raw ? res[1] : decodeURIComponent(res[1])) : null;
+  };
+
+  // Get the cookie's value without decoding.
+  Cookie.getRaw = function(key) {
+    return Cookie.get(key, true);
+  };
+
+  // Set a cookie.
+  Cookie.set = function(key, value, raw, opts) {
+    if (raw !== true) {
+      opts = raw;
+      raw = false;
+    }
+    opts = opts ? convert(opts) : convert({});
+    var cookie = key + '=' + (raw ? value : encodeURIComponent(value)) + opts;
+    document.cookie = cookie;
+  };
+
+  // Set a cookie without encoding the value.
+  Cookie.setRaw = function(key, value, opts) {
+    Cookie.set(key, value, true, opts);
+  };
+
+  // Remove a cookie by the specified key.
+  Cookie.remove = function(key) {
+    Cookie.set(key, 'a', { expires: new Date() });
+  };
+
+  // Helper function
+  // ---------------
+
+  // Escape special characters.
+  function escapeRe(str) {
+    return str.replace(/[.*+?^$|[\](){}\\-]/g, '\\$&');
+  }
+
+  // Convert an object to a cookie option string.
+  function convert(opts) {
+    var res = '';
+
+    for (var p in opts) {
+      if (opts.hasOwnProperty(p)) {
+
+        if (p === 'expires') {
+          var expires = opts[p];
+          if (typeof expires !== 'object') {
+            expires += typeof expires === 'number' ? 'D' : '';
+            expires = computeExpires(expires);
+          }
+          opts[p] = expires.toUTCString();
+        }
+
+        if (p === 'secure') {
+          if (opts[p]) {
+            res += ';' + p;
+          }
+
+          continue;
+        }
+
+        res += ';' + p + '=' + opts[p];
+      }
+    }
+
+    if (!opts.hasOwnProperty('path')) {
+      res += ';path=/';
+    }
+
+    return res;
+  }
+
+  // Return a future date by the given string.
+  function computeExpires(str) {
+    var expires = new Date();
+    var lastCh = str.charAt(str.length - 1);
+    var value = parseInt(str, 10);
+
+    switch (lastCh) {
+      case 'Y': expires.setFullYear(expires.getFullYear() + value); break;
+      case 'M': expires.setMonth(expires.getMonth() + value); break;
+      case 'D': expires.setDate(expires.getDate() + value); break;
+      case 'h': expires.setHours(expires.getHours() + value); break;
+      case 'm': expires.setMinutes(expires.getMinutes() + value); break;
+      case 's': expires.setSeconds(expires.getSeconds() + value); break;
+      default: expires = new Date(str);
+    }
+
+    return expires;
+  }
+
+  return Cookie;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-cookie/src/vue-cookie.js":
+/*!***************************************************!*\
+  !*** ./node_modules/vue-cookie/src/vue-cookie.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function () {
+    Number.isInteger = Number.isInteger || function (value) {
+        return typeof value === 'number' &&
+            isFinite(value) &&
+            Math.floor(value) === value;
+    };
+    var Cookie = __webpack_require__(/*! tiny-cookie */ "./node_modules/tiny-cookie/tiny-cookie.js");
+
+    var VueCookie = {
+
+        install: function (Vue) {
+            Vue.prototype.$cookie = this;
+            Vue.cookie = this;
+        },
+        set: function (name, value, daysOrOptions) {
+            var opts = daysOrOptions;
+            if(Number.isInteger(daysOrOptions)) {
+                opts = {expires: daysOrOptions};
+            }
+            return Cookie.set(name, value, opts);
+        },
+
+        get: function (name) {
+            return Cookie.get(name);
+        },
+
+        delete: function (name, options) {
+            var opts = {expires: -1};
+            if(options !== undefined) {
+                opts = Object.assign(options, opts);
+            }
+            this.set(name, '', opts);
+        }
+    };
+
+    if (true) {
+        module.exports = VueCookie;
+    } else {}
+
+})();
+
+
+/***/ }),
+
 /***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./src/Button.vue?vue&type=template&id=65796f6b&scoped=true&":
 /*!*************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./src/Button.vue?vue&type=template&id=65796f6b&scoped=true& ***!
@@ -3557,16 +3896,11 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("td", [
+    _c("input", { attrs: { type: "checkbox" }, on: { change: _vm.onChange } })
+  ])
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("td", [_c("input", { attrs: { type: "checkbox" } })])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -3588,16 +3922,11 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("div", [
+    _c("input", { attrs: { type: "text" }, on: { change: _vm.onChange } })
+  ])
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", [_c("input", { attrs: { type: "text" } })])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -3669,7 +3998,14 @@ var render = function() {
                       return _c(component.component, {
                         key: "mass_" + component.field,
                         tag: "component",
-                        attrs: { props: component.props }
+                        attrs: { props: component.props },
+                        model: {
+                          value: _vm.filters[component.field],
+                          callback: function($$v) {
+                            _vm.$set(_vm.filters, component.field, $$v)
+                          },
+                          expression: "filters[component.field]"
+                        }
                       })
                     })
                   ],
@@ -3699,9 +4035,35 @@ var render = function() {
                           "ul",
                           { staticClass: "pagination" },
                           [
-                            _vm._m(0, true),
+                            _c("li", { staticClass: "pagination-item" }, [
+                              _c(
+                                "button",
+                                {
+                                  attrs: { type: "button" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.pagination.gotoBegin()
+                                    }
+                                  }
+                                },
+                                [_vm._v("В начало")]
+                              )
+                            ]),
                             _vm._v(" "),
-                            _vm._m(1, true),
+                            _c("li", { staticClass: "pagination-item" }, [
+                              _c(
+                                "button",
+                                {
+                                  attrs: { type: "button" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.pagination.prevPage()
+                                    }
+                                  }
+                                },
+                                [_vm._v("Назад")]
+                              )
+                            ]),
                             _vm._v(" "),
                             _vm._l(
                               _vm.helpers.range(1, _vm.pagination.pagesCount()),
@@ -3712,7 +4074,14 @@ var render = function() {
                                   [
                                     _c(
                                       "button",
-                                      { attrs: { type: "button" } },
+                                      {
+                                        attrs: { type: "button" },
+                                        on: {
+                                          click: function($event) {
+                                            return _vm.pagination.gotoPage(page)
+                                          }
+                                        }
+                                      },
                                       [
                                         _vm._v(
                                           "\n\t\t\t\t\t\t\t\t" +
@@ -3726,9 +4095,35 @@ var render = function() {
                               }
                             ),
                             _vm._v(" "),
-                            _vm._m(2, true),
+                            _c("li", { staticClass: "pagination-item" }, [
+                              _c(
+                                "button",
+                                {
+                                  attrs: { type: "button" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.pagination.nextPage()
+                                    }
+                                  }
+                                },
+                                [_vm._v("Вперед")]
+                              )
+                            ]),
                             _vm._v(" "),
-                            _vm._m(3, true)
+                            _c("li", { staticClass: "pagination-item" }, [
+                              _c(
+                                "button",
+                                {
+                                  attrs: { type: "button" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.pagination.gotoEnd()
+                                    }
+                                  }
+                                },
+                                [_vm._v("В конец")]
+                              )
+                            ])
                           ],
                           2
                         ),
@@ -3736,13 +4131,55 @@ var render = function() {
                         _c("div", { staticClass: "items-per-page" }, [
                           _c(
                             "select",
+                            {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.pagination.itemsPerPage,
+                                  expression: "pagination.itemsPerPage"
+                                }
+                              ],
+                              on: {
+                                change: function($event) {
+                                  var $$selectedVal = Array.prototype.filter
+                                    .call($event.target.options, function(o) {
+                                      return o.selected
+                                    })
+                                    .map(function(o) {
+                                      var val =
+                                        "_value" in o ? o._value : o.value
+                                      return val
+                                    })
+                                  _vm.$set(
+                                    _vm.pagination,
+                                    "itemsPerPage",
+                                    $event.target.multiple
+                                      ? $$selectedVal
+                                      : $$selectedVal[0]
+                                  )
+                                }
+                              }
+                            },
                             _vm._l(
                               _vm.pagination.itemsPerPageVariants,
                               function(variant) {
                                 return _c(
                                   "option",
-                                  { domProps: { value: variant } },
-                                  [_vm._v(_vm._s(variant))]
+                                  {
+                                    domProps: {
+                                      selected:
+                                        variant == _vm.pagination.itemsPerPage,
+                                      value: variant
+                                    }
+                                  },
+                                  [
+                                    _vm._v(
+                                      "\n\t\t\t\t\t\t\t\t" +
+                                        _vm._s(variant) +
+                                        "\n\t\t\t\t\t\t\t"
+                                    )
+                                  ]
                                 )
                               }
                             ),
@@ -3786,77 +4223,95 @@ var render = function() {
                         "\n\t\t\t\t\tпо " +
                         _vm._s(_vm.pagination.getOffsetEnd()) +
                         ",\n\t\t\t\t\tвсего: " +
-                        _vm._s(_vm.pagination.total) +
-                        " шт.\n\t\t\t\t\tна " +
+                        _vm._s(_vm.pagination.getTotal()) +
+                        " шт.\n\t\t\t\t\t" +
+                        _vm._s(_vm.pagination.page) +
+                        "\n\t\t\t\t\tиз " +
                         _vm._s(_vm.pagination.pagesCount()) +
                         " стр.\n\t\t\t\t"
                     )
                   ]),
                   _vm._v(" "),
-                  _c("table", { staticClass: "table" }, [
-                    _c("thead", [
-                      _c(
-                        "tr",
-                        _vm._l(_vm.cellComponents, function(component) {
-                          return _c(
-                            "th",
-                            {
-                              attrs: {
-                                width: component.attrs
-                                  ? component.attrs.width
-                                  : ""
-                              }
-                            },
-                            [
-                              _vm._v(
-                                "\n\t\t\t\t\t\t\t\t" +
-                                  _vm._s(component.label) +
-                                  "\n\t\t\t\t\t\t\t\t"
-                              ),
-                              component.field
-                                ? _c("div", { staticClass: "table-sort" }, [
-                                    _c(
-                                      "button",
-                                      { attrs: { type: "button" } },
-                                      [_vm._v("↑")]
-                                    ),
-                                    _vm._v(" "),
-                                    _c(
-                                      "button",
-                                      { attrs: { type: "button" } },
-                                      [_vm._v("↓")]
-                                    )
-                                  ])
-                                : _vm._e()
-                            ]
+                  _vm.isLoading
+                    ? _c("div", [
+                        _vm._v("\n\t\t\t\t\tИдет загрузка...\n\t\t\t\t")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  !_vm.isLoading
+                    ? _c("table", { staticClass: "table" }, [
+                        _c("thead", [
+                          _c(
+                            "tr",
+                            _vm._l(_vm.cellComponents, function(component) {
+                              return _c(
+                                "th",
+                                {
+                                  attrs: {
+                                    width: component.attrs
+                                      ? component.attrs.width
+                                      : ""
+                                  }
+                                },
+                                [
+                                  _vm._v(
+                                    "\n\t\t\t\t\t\t\t\t" +
+                                      _vm._s(component.label) +
+                                      "\n\t\t\t\t\t\t\t\t"
+                                  ),
+                                  component.field
+                                    ? _c("div", { staticClass: "table-sort" }, [
+                                        _c(
+                                          "button",
+                                          { attrs: { type: "button" } },
+                                          [_vm._v("↑")]
+                                        ),
+                                        _vm._v(" "),
+                                        _c(
+                                          "button",
+                                          { attrs: { type: "button" } },
+                                          [_vm._v("↓")]
+                                        )
+                                      ])
+                                    : _vm._e()
+                                ]
+                              )
+                            }),
+                            0
                           )
-                        }),
-                        0
-                      )
-                    ]),
-                    _vm._v(" "),
-                    _c(
-                      "tbody",
-                      _vm._l(_vm.items, function(item, index) {
-                        return _c(
-                          "tr",
-                          _vm._l(_vm.cellComponents, function(component) {
-                            return _c(component.component, {
-                              key: index + "_" + component.field,
-                              tag: "component",
-                              attrs: {
-                                field: component.field,
-                                props: component.props,
-                                item: item
-                              }
-                            })
+                        ]),
+                        _vm._v(" "),
+                        _c(
+                          "tbody",
+                          _vm._l(_vm.items, function(item, index) {
+                            return _c(
+                              "tr",
+                              _vm._l(_vm.cellComponents, function(component) {
+                                return _c(component.component, {
+                                  key: index + "_" + component.field,
+                                  tag: "component",
+                                  attrs: {
+                                    field: component.field,
+                                    props: component.props,
+                                    item: item
+                                  },
+                                  on: {
+                                    change: function($event) {
+                                      return _vm.onMassComponentChanged(
+                                        $event,
+                                        component
+                                      )
+                                    }
+                                  }
+                                })
+                              }),
+                              1
+                            )
                           }),
-                          1
+                          0
                         )
-                      }),
-                      0
-                    )
-                  ])
+                      ])
+                    : _vm._e()
                 ])
               ])
             : _vm._e()
@@ -3867,40 +4322,7 @@ var render = function() {
     0
   )
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("li", { staticClass: "pagination-item" }, [
-      _c("button", { attrs: { type: "button" } }, [_vm._v("В начало")])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("li", { staticClass: "pagination-item" }, [
-      _c("button", { attrs: { type: "button" } }, [_vm._v("Назад")])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("li", { staticClass: "pagination-item" }, [
-      _c("button", { attrs: { type: "button" } }, [_vm._v("Вперед")])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("li", { staticClass: "pagination-item" }, [
-      _c("button", { attrs: { type: "button" } }, [_vm._v("В конец")])
-    ])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -16389,10 +16811,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _VueTable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VueTable */ "./src/VueTable.vue");
 /* harmony import */ var _StringCell__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./StringCell */ "./src/StringCell.vue");
+/* harmony import */ var vue_cookie__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vue-cookie */ "./node_modules/vue-cookie/src/vue-cookie.js");
+/* harmony import */ var vue_cookie__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(vue_cookie__WEBPACK_IMPORTED_MODULE_3__);
+
 
 
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.component('string-cell', _StringCell__WEBPACK_IMPORTED_MODULE_2__["default"]);
+vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vue_cookie__WEBPACK_IMPORTED_MODULE_3___default.a);
 var app = new vue__WEBPACK_IMPORTED_MODULE_0___default.a({
   el: '#app',
   components: {
@@ -16401,6 +16827,11 @@ var app = new vue__WEBPACK_IMPORTED_MODULE_0___default.a({
   },
   data: function data() {
     return {};
+  },
+  methods: {
+    test: function test() {
+      window.history.pushState({}, '', '/?123123123=1');
+    }
   }
 });
 

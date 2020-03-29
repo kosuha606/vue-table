@@ -1,12 +1,17 @@
 <template>
     <td>
-        <input type="checkbox">
+        <input @change="onChange" type="checkbox">
     </td>
 </template>
 
 <script>
     export default {
-        name: "CheckboxCell"
+        name: "CheckboxCell",
+        methods: {
+            onChange(e) {
+                this.$emit('change', e.target.value);
+            }
+        }
     }
 </script>
 

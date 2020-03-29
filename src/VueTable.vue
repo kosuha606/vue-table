@@ -5,6 +5,7 @@
 				<div>
 					<h3>Фильтр</h3>
 					<component
+							v-model="filters[component.field]"
 							:key="'mass_'+component.field"
 							:is="component.component"
 							:props="component.props"
@@ -20,26 +21,31 @@
 					<div v-else class="pagination-wrapper">
 						<ul class="pagination">
 							<li class="pagination-item">
-								<button type="button">В начало</button>
+								<button @click="pagination.gotoBegin()" type="button">В начало</button>
 							</li>
 							<li class="pagination-item">
-								<button type="button">Назад</button>
+								<button @click="pagination.prevPage()" type="button">Назад</button>
 							</li>
 							<li class="pagination-item" v-for="page in helpers.range(1, pagination.pagesCount())">
-								<button type="button">
+								<button @click="pagination.gotoPage(page)" type="button">
 									{{ page }}
 								</button>
 							</li>
 							<li class="pagination-item">
-								<button type="button">Вперед</button>
+								<button @click="pagination.nextPage()" type="button">Вперед</button>
 							</li>
 							<li class="pagination-item">
-								<button type="button">В конец</button>
+								<button @click="pagination.gotoEnd()" type="button">В конец</button>
 							</li>
 						</ul>
 						<div class="items-per-page">
-							<select>
-								<option v-for="variant in pagination.itemsPerPageVariants" :value="variant">{{ variant }}</option>
+							<select v-model="pagination.itemsPerPage">
+								<option
+									:selected="variant==pagination.itemsPerPage"
+									v-for="variant in pagination.itemsPerPageVariants"
+									:value="variant">
+									{{ variant }}
+								</option>
 							</select>
 						</div>
 					</div>
@@ -62,10 +68,14 @@
 					<div class="table-info">
 						записи с {{ pagination.getOffsetBegin()+1 }}
 						по {{ pagination.getOffsetEnd() }},
-						всего: {{ pagination.total }} шт.
-						на {{ pagination.pagesCount() }} стр.
+						всего: {{ pagination.getTotal() }} шт.
+						{{ pagination.page }}
+						из {{ pagination.pagesCount() }} стр.
 					</div>
-					<table class="table">
+					<div v-if="isLoading">
+						Идет загрузка...
+					</div>
+					<table class="table" v-if="!isLoading">
 						<thead>
 							<tr>
 								<th
@@ -82,6 +92,7 @@
 						<tbody>
 							<tr v-for="(item, index) in items">
 								<component
+										@change="onMassComponentChanged($event, component)"
 										:key="index+'_'+component.field"
 										:is="component.component"
 										:field="component.field"
@@ -106,37 +117,8 @@ import FilterInput from "./FilterInput";
 import Button from "./Button";
 import CheckboxCell from "./CheckboxCell";
 
-let pagination = {
-	page: 1,
-	itemsPerPage: 10,
-	itemsPerPageVariants: [10, 20, 30, 40, 50],
-	total: 10,
-	appendMode: false,
-	getOffsetBegin() {
-		return (this.page-1)*this.itemsPerPage;
-	},
-	getOffsetEnd() {
-		return (this.page)*this.itemsPerPage;
-	},
-	pagesCount() {
-		return Math.round(this.total/this.itemsPerPage);
-	},
-	gotoEnd() {
-
-	},
-	gotoBegint() {
-
-	},
-	gotoPage() {
-
-	},
-	nextPage() {
-
-	},
-	prevPage() {
-
-	}
-};
+const defaultItemsPerPageVariants = [10, 20, 30, 40, 50];
+const defaultItemsPerPage = 10;
 
 const helpers = {
 	range: function* (lorange,hirange){
@@ -144,6 +126,16 @@ const helpers = {
 		while (n <= hirange){
 			yield n++;
 		}
+	},
+	addParamToUrl(paramStr) {
+		let result = '';
+		if(location.search === "") {
+			result = location.href + "?"+paramStr;
+		} else {
+			result = location.href + "&"+paramStr;
+		}
+
+		return result;
 	}
 };
 
@@ -159,15 +151,15 @@ export default {
 		syncUrl: String,
 		paginationAppendMode: {
 			type: Boolean,
-			default: pagination.appendMode,
+			default: false,
 		},
 		itemsPerPage: {
 			type: Number,
-			default: pagination.itemsPerPage,
+			default: defaultItemsPerPage,
 		},
 		itemsPerPageVariants: {
 			type: Array,
-			default: () => pagination.itemsPerPageVariants,
+			default: () => defaultItemsPerPageVariants,
 		},
 		filterComponents: {
 			type: Array,
@@ -194,21 +186,106 @@ export default {
 			}
 		}
 	},
+	watch: {
+		listState: {
+			handler() {
+				this.loadList()
+			},
+			deep: true,
+		}
+	},
 	data() {
+		const vm = this;
+
 		return {
+			isLoading: false,
 			filters: {},
 			massOperations: {},
 			items: [],
-			pagination: pagination,
+			itemsTotal: 10,
+			pagination: {
+				page: 1,
+				itemsPerPage: defaultItemsPerPage,
+				itemsPerPageVariants: defaultItemsPerPageVariants,
+				total: 10,
+				appendMode: false,
+				getTotal() {
+					return vm.itemsTotal;
+				},
+				getOffsetBegin() {
+					return (this.page-1)*this.itemsPerPage;
+				},
+				getOffsetEnd() {
+					let possibleEnd = this.page*this.itemsPerPage;
+					if (possibleEnd > this.getTotal()) {
+						return this.getTotal();
+					}
+
+					return possibleEnd;
+				},
+				pagesCount() {
+					return Math.round((this.getTotal()/this.itemsPerPage)+0.5);
+				},
+				gotoEnd() {
+					this.page = this.pagesCount();
+					vm.$forceUpdate();
+				},
+				gotoBegin() {
+					this.page = 1;
+					vm.$forceUpdate();
+				},
+				gotoPage(page) {
+					this.page = page;
+					vm.$forceUpdate();
+				},
+				nextPage() {
+					if (this.page >= this.pagesCount()) {
+						return;
+					}
+					this.page = this.page+1;
+					vm.$forceUpdate();
+				},
+				prevPage() {
+					if (this.page <= 1) {
+						return;
+					}
+					this.page = this.page-1;
+					vm.$forceUpdate();
+				}
+			},
 			helpers: helpers,
 		}
+	},
+	computed: {
+		cookieKey() {
+			return 'vue-table-'+this.id;
+		},
+		listState() {
+			return  {
+				pagination: this.pagination,
+				filters: this.filters,
+				mass_operations: this.massOperations
+			};
+		},
 	},
 	mounted() {
 		this.pagination.itemsPerPage = this.itemsPerPage;
 		this.pagination.itemsPerPageVariants = this.itemsPerPageVariants;
+		this.pagination.appendMode = this.paginationAppendMode;
+		this.unserializeStateFromUrl();
 		this.loadList();
 	},
 	methods: {
+		onMassComponentChanged(e, component) {
+			if (!component.massOperation) {
+				return;
+			}
+			if (this.massOperations[component.massOperation]) {
+				this.massOperations[component.massOperation].push(e);
+			} else {
+				this.massOperations[component.massOperation] = [e];
+			}
+		},
 		printComponentAttrs(component) {
 			return 'hhh';
 		},
@@ -220,16 +297,15 @@ export default {
 				throw new Error('SyncUrl should be specified');
 			}
 
-			axios.post(this.syncUrl, {
-				pagination: this.pagination,
-				filters: this.filters,
-				mass_operations: this.massOperations
-			}).then((response) => {
+			this.isLoading = true;
+			axios.post(this.syncUrl, this.listState).then((response) => {
 				this.items = response.data.items;
-				this.pagination.total = response.data.total;
+				this.isLoading = false;
+				this.itemsTotal = response.data.total;
 				this.$forceUpdate();
+				this.serializeStateToUrl();
 			}).catch((response) => {
-
+				this.isLoading = false;
 			});
 		},
 		/**
@@ -247,14 +323,30 @@ export default {
 		/**
 		 * Сохранить состояние в урл
 		 */
-		serializeStateToUrl(paginatorInstance, filterData, SortInstance, massOperationsData) {
-		
+		serializeStateToUrl() {
+			const parsedUrl = new URL(window.location.href);
+			parsedUrl.searchParams.set(this.id, 'hold');
+			window.history.pushState({}, '', parsedUrl.href);
+			this.$cookie.set(this.cookieKey, JSON.stringify(this.listState));
 		},
 		/**
 		 * Восстановить состояние из урл
 		 */
 		unserializeStateFromUrl() {
-			
+			const parsedUrl = new URL(window.location.href);
+			if (!parsedUrl.searchParams.get(this.id)) {
+				return;
+			}
+			let state = this.$cookie.get(this.cookieKey);
+			if (!state) {
+				return;
+			}
+			console.log(state);
+			state = JSON.parse(state);
+			this.pagination.page = state.pagination.page;
+			this.pagination.itemsPerPage = state.pagination.itemsPerPage;
+			this.filters = state.filters;
+			this.mass_operations = state.mass_operations;
 		},
 	}
 }

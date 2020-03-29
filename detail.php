@@ -19,7 +19,8 @@
         <p>
             Просто заглушка
         </p>
-        <a href="/">Назад</a>
+        <a onclick="window.history.back()" href="#">Назад по истории</a>
+        <a href="/">Назад по ссылке</a>
     </div>
 </body>
 </html>
