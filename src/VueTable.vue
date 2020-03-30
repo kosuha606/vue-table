@@ -365,7 +365,7 @@ export default {
 		 */
 		serializeStateToUrl() {
 			const parsedUrl = new URL(window.location.href);
-			parsedUrl.searchParams.set(this.id, 'hold');
+			parsedUrl.searchParams.set(this.id, 'on');
 			window.history.pushState({}, '', parsedUrl.href);
 			this.$cookie.set(this.cookieKey, JSON.stringify(this.listState));
 		},
