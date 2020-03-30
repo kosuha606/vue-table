@@ -83,7 +83,7 @@ function lines($string) {
         field: 'name',
         label: 'Название',
         props: {
-            link: function(item) { return '/detail.php?id='+item.id; }
+            link: function(item) { return 'detail.php?id='+item.id; }
         },
         component: 'string-cell'
     },
