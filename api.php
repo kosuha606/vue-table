@@ -13,11 +13,38 @@ $pagination = $_POST['pagination'] ?? ['page' => 1, 'itemsPerPage' => 10];
 $limit = $pagination['itemsPerPage'];
 $offset = ($pagination['page']-1)*$pagination['itemsPerPage'];
 
+$sortField = 'id';
+$sortDireciton = 'asc';
+
+if (isset($_POST['sort'])) {
+    $sortField = $_POST['sort']['field'];
+    $sortDireciton = $_POST['sort']['direction'];
+}
+
+$whereItems = [];
+
+if (isset($_POST['filters'])) {
+    foreach ($_POST['filters'] as $key => $value) {
+        switch ($key) {
+            case 'name':
+                $whereItems[] = "name LIKE '%$value%'";
+                break;
+        }
+    }
+}
+
+$where = '';
+if ($whereItems) {
+    $where = 'WHERE '.join(' AND ', $whereItems);
+}
+
 /** @var PDOStatement $cnt */
-$cnt = DB::query("SELECT COUNT(id) as cnt from products")->fetch();
+$cnt = DB::query("SELECT COUNT(id) as cnt from products $where")->fetch();
+
 
 $data = [];
-foreach (DB::query("SELECT * FROM products LIMIT $offset, $limit") as $item) {
+$sql = "SELECT * FROM products $where ORDER BY $sortField $sortDireciton LIMIT $offset, $limit";
+foreach (DB::query($sql) as $item) {
     $data[] = $item;
 }
 
