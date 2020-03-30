@@ -22,8 +22,8 @@ function lines($string) {
 
 <html>
 <head>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/dist/vuetable.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="dist/vuetable.css">
     <link rel="stylesheet"
           href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/default.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js"></script>
@@ -50,7 +50,7 @@ function lines($string) {
 <?php ob_start(); ?>
 <vue-table
     id="first"
-    :sync-url="'/api.php'"
+    :sync-url="'api.php'"
     :filter-components="[
     {
         field: 'name',
@@ -112,7 +112,7 @@ $one = ob_get_clean();
 <?php ob_start(); ?>
 <vue-table
     id="second"
-    :sync-url="'/api.php'"
+    :sync-url="'api.php'"
     :templates-order="['filters', 'pagination', 'list']"
     :cell-components="[
     {
@@ -150,7 +150,7 @@ $one = ob_get_clean();
     <?php ob_start(); ?>
     <vue-table
             id="third"
-            :sync-url="'/api.php'"
+            :sync-url="'api.php'"
             :templates-order="['filters', 'list',  'pagination']"
             :cell-components="[
     {
@@ -188,7 +188,7 @@ $one = ob_get_clean();
     <?php ob_start(); ?>
     <vue-table
         id="appendpagination"
-        :sync-url="'/api.php'"
+        :sync-url="'api.php'"
         :pagination-append-mode="true"
         :templates-order="['list',  'pagination']"
         :cell-components="[
