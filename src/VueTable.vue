@@ -74,10 +74,7 @@
 						{{ pagination.page }}
 						из {{ pagination.pagesCount() }} стр.
 					</div>
-					<div v-if="isLoading">
-						Идет загрузка...
-					</div>
-					<table class="table" v-if="!isLoading">
+					<table :class="{'table': 1, 'table-loading': isLoading}">
 						<thead>
 							<tr>
 								<th

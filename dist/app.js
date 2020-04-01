@@ -2231,9 +2231,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
 
 
 
@@ -4392,141 +4389,136 @@ var render = function() {
                     )
                   ]),
                   _vm._v(" "),
-                  _vm.isLoading
-                    ? _c("div", [
-                        _vm._v("\n\t\t\t\t\tИдет загрузка...\n\t\t\t\t")
-                      ])
-                    : _vm._e(),
-                  _vm._v(" "),
-                  !_vm.isLoading
-                    ? _c("table", { staticClass: "table" }, [
-                        _c("thead", [
-                          _c(
-                            "tr",
-                            _vm._l(_vm.cellComponents, function(component) {
-                              return _c(
-                                "th",
-                                {
-                                  attrs: {
-                                    width: component.attrs
-                                      ? component.attrs.width
-                                      : ""
-                                  }
-                                },
-                                [
-                                  _vm._v(
-                                    "\n\t\t\t\t\t\t\t\t" +
-                                      _vm._s(component.label) +
-                                      "\n\t\t\t\t\t\t\t\t"
-                                  ),
-                                  component.field
-                                    ? _c("div", { staticClass: "table-sort" }, [
-                                        _c(
-                                          "button",
-                                          {
-                                            class: {
-                                              "table-sort-active":
-                                                _vm.sort.field ==
-                                                  component.field &&
-                                                _vm.sort.direction == "desc"
-                                            },
-                                            attrs: { type: "button" },
-                                            on: {
-                                              click: function($event) {
-                                                return _vm.onSort(
-                                                  component.field,
-                                                  "desc"
-                                                )
-                                              }
-                                            }
-                                          },
-                                          [_vm._v("↑")]
-                                        ),
-                                        _vm._v(" "),
-                                        _c(
-                                          "button",
-                                          {
-                                            class: {
-                                              "table-sort-active":
-                                                _vm.sort.field ==
-                                                  component.field &&
-                                                _vm.sort.direction == "asc"
-                                            },
-                                            attrs: { type: "button" },
-                                            on: {
-                                              click: function($event) {
-                                                return _vm.onSort(
-                                                  component.field,
-                                                  "asc"
-                                                )
-                                              }
-                                            }
-                                          },
-                                          [_vm._v("↓")]
-                                        )
-                                      ])
-                                    : _vm._e()
-                                ]
-                              )
-                            }),
-                            0
-                          )
-                        ]),
-                        _vm._v(" "),
+                  _c(
+                    "table",
+                    { class: { table: 1, "table-loading": _vm.isLoading } },
+                    [
+                      _c("thead", [
                         _c(
-                          "tbody",
-                          _vm._l(_vm.items, function(item, index) {
+                          "tr",
+                          _vm._l(_vm.cellComponents, function(component) {
                             return _c(
-                              "tr",
+                              "th",
+                              {
+                                attrs: {
+                                  width: component.attrs
+                                    ? component.attrs.width
+                                    : ""
+                                }
+                              },
                               [
-                                _vm._l(_vm.cellComponents, function(component) {
-                                  return [
-                                    component.massOperation
-                                      ? _c(component.component, {
-                                          key: index + "_" + component.field,
-                                          tag: "component",
-                                          attrs: {
-                                            "mass-operations":
-                                              _vm.massOperations,
-                                            component: component,
-                                            field: component.field,
-                                            props: component.props,
-                                            item: item
+                                _vm._v(
+                                  "\n\t\t\t\t\t\t\t\t" +
+                                    _vm._s(component.label) +
+                                    "\n\t\t\t\t\t\t\t\t"
+                                ),
+                                component.field
+                                  ? _c("div", { staticClass: "table-sort" }, [
+                                      _c(
+                                        "button",
+                                        {
+                                          class: {
+                                            "table-sort-active":
+                                              _vm.sort.field ==
+                                                component.field &&
+                                              _vm.sort.direction == "desc"
                                           },
+                                          attrs: { type: "button" },
                                           on: {
-                                            "mass-select": function($event) {
-                                              return _vm.onMassComponentSelect(
-                                                $event,
-                                                component
-                                              )
-                                            },
-                                            "mass-unselect": function($event) {
-                                              return _vm.onMassComponentUnselect(
-                                                $event,
-                                                component
+                                            click: function($event) {
+                                              return _vm.onSort(
+                                                component.field,
+                                                "desc"
                                               )
                                             }
                                           }
-                                        })
-                                      : _c(component.component, {
-                                          key: index + "_" + component.field,
-                                          tag: "component",
-                                          attrs: {
-                                            field: component.field,
-                                            props: component.props,
-                                            item: item
+                                        },
+                                        [_vm._v("↑")]
+                                      ),
+                                      _vm._v(" "),
+                                      _c(
+                                        "button",
+                                        {
+                                          class: {
+                                            "table-sort-active":
+                                              _vm.sort.field ==
+                                                component.field &&
+                                              _vm.sort.direction == "asc"
+                                          },
+                                          attrs: { type: "button" },
+                                          on: {
+                                            click: function($event) {
+                                              return _vm.onSort(
+                                                component.field,
+                                                "asc"
+                                              )
+                                            }
                                           }
-                                        })
-                                  ]
-                                })
-                              ],
-                              2
+                                        },
+                                        [_vm._v("↓")]
+                                      )
+                                    ])
+                                  : _vm._e()
+                              ]
                             )
                           }),
                           0
                         )
-                      ])
-                    : _vm._e()
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "tbody",
+                        _vm._l(_vm.items, function(item, index) {
+                          return _c(
+                            "tr",
+                            [
+                              _vm._l(_vm.cellComponents, function(component) {
+                                return [
+                                  component.massOperation
+                                    ? _c(component.component, {
+                                        key: index + "_" + component.field,
+                                        tag: "component",
+                                        attrs: {
+                                          "mass-operations": _vm.massOperations,
+                                          component: component,
+                                          field: component.field,
+                                          props: component.props,
+                                          item: item
+                                        },
+                                        on: {
+                                          "mass-select": function($event) {
+                                            return _vm.onMassComponentSelect(
+                                              $event,
+                                              component
+                                            )
+                                          },
+                                          "mass-unselect": function($event) {
+                                            return _vm.onMassComponentUnselect(
+                                              $event,
+                                              component
+                                            )
+                                          }
+                                        }
+                                      })
+                                    : _c(component.component, {
+                                        key: index + "_" + component.field,
+                                        tag: "component",
+                                        attrs: {
+                                          field: component.field,
+                                          props: component.props,
+                                          item: item
+                                        }
+                                      })
+                                ]
+                              })
+                            ],
+                            2
+                          )
+                        }),
+                        0
+                      )
+                    ]
+                  )
                 ])
               ])
             : _vm._e()
