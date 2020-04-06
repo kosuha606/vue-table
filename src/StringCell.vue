@@ -13,7 +13,7 @@
     export default {
         name: "StringCell",
         props: {
-            value: String,
+            value: [String, Number],
             item: Object,
             field: String,
         }

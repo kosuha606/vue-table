@@ -6,7 +6,7 @@
 					<h3>Фильтр</h3>
 					<component
 							v-model="filters[component.field]"
-							:key="'mass_'+component.field"
+							:key="'mass_'+component.field+component.label"
 							:is="component.component"
 							:label="component.label"
 							:props="component.props"
@@ -58,7 +58,7 @@
 					<h3>Операции</h3>
 					<component
 							:mass-operations="massOperations"
-							:key="'mass_'+component.field"
+							:key="'mass_'+component.field+component.label"
 							:is="component.component"
 							:props="component.props"
 							v-for="component in massOperationComponents"
@@ -95,7 +95,7 @@
 											v-if="component.massOperation"
 											@mass-select="onMassComponentSelect($event, component)"
 											@mass-unselect="onMassComponentUnselect($event, component)"
-											:key="index+'_'+component.field"
+											:key="index+'_'+component.field+component.label"
 											:mass-operations="massOperations"
 											:component="component"
 											:is="component.component"
@@ -105,11 +105,12 @@
 									></component>
 									<component
 											v-else
-											:key="index+'_'+component.field"
+											:key="index+'_'+component.field+component.label"
 											:is="component.component"
 											:field="component.field"
 											:props="component.props"
 											:item="item"
+											:value="item[component.field]"
 									></component>
 								</template>
 							</tr>
@@ -162,7 +163,7 @@ export default {
 	},
 	props: {
 		id: String,
-		syncUrl: String,
+		syncUrl: [String, Function],
 		paginationAppendMode: {
 			type: Boolean,
 			default: false,
@@ -335,13 +336,23 @@ export default {
 			}
 
 			this.isLoading = true;
-			axios.post(this.syncUrl, this.listState).then((response) => {
+
+			let success = (response) => {
 				this.items = response.data.items;
 				this.isLoading = false;
 				this.itemsTotal = response.data.total;
 				this.$forceUpdate();
 				this.serializeStateToUrl();
-			}).catch((response) => {
+			};
+
+			if (typeof(this.syncUrl) === 'function') {
+				this.syncUrl(success, this.listState);
+				return;
+			}
+
+			axios.get(this.syncUrl, this.listState)
+				.then(success)
+				.catch((response) => {
 				this.isLoading = false;
 			});
 		},
