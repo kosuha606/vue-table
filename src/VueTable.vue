@@ -2,16 +2,22 @@
 	<div class="vue-table">
 		<div v-for="template in templatesOrder">
 			<slot v-if="template === 'filters'" name="filter">
-				<div>
-					<h3>Фильтр</h3>
+				<div class="vue-table-filter">
+					<h3 v-if="filterComponents.length">Фильтр</h3>
 					<component
 							v-model="filters[component.field]"
 							:key="'mass_'+component.field+component.label"
 							:is="component.component"
+							:name="component.field"
 							:label="component.label"
 							:props="component.props"
 							v-for="component in filterComponents"
 					></component>
+					<div class="vue-table-filter-reset">
+						<button @click="resetFilter" v-if="filterComponents.length">
+							Сбросить
+						</button>
+					</div>
 				</div>
 			</slot>
 			<slot v-if="template === 'pagination'" name="pagination_top">
@@ -55,7 +61,7 @@
 			<slot v-if="template === 'mass_operations'" name="mass_operations">
 				<div>
 					<hr>
-					<h3>Операции</h3>
+					<h3 v-if="massOperationComponents.length">Операции</h3>
 					<component
 							:mass-operations="massOperations"
 							:key="'mass_'+component.field+component.label"
@@ -323,6 +329,10 @@ export default {
 		this.loadList();
 	},
 	methods: {
+		resetFilter() {
+			this.filters = {};
+			this.$forceUpdate();
+		},
 		onSort(field, direction) {
 			this.sort = {
 				field: field,
@@ -419,7 +429,7 @@ export default {
 			if (!state) {
 				return;
 			}
-			
+
 			state = JSON.parse(state);
 			this.pagination.page = state.pagination.page;
 			this.pagination.itemsPerPage = state.pagination.itemsPerPage;
