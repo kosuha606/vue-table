@@ -229,12 +229,21 @@ export default {
 				total: 10,
 				appendMode: false,
 				getTotal() {
+					if (!this) {
+						return 1;
+					}
 					return vm.itemsTotal;
 				},
 				getOffsetBegin() {
+					if (!this) {
+						return 1;
+					}
 					return (this.page-1)*this.itemsPerPage;
 				},
 				getOffsetEnd() {
+					if (!this) {
+						return 1;
+					}
 					let possibleEnd = this.page*this.itemsPerPage;
 					if (possibleEnd > this.getTotal()) {
 						return this.getTotal();
@@ -243,21 +252,36 @@ export default {
 					return possibleEnd;
 				},
 				pagesCount() {
+					if (!this) {
+						return 1;
+					}
 					return Math.round((this.getTotal()/this.itemsPerPage)+0.5);
 				},
 				gotoEnd() {
+					if (!this) {
+						return 1;
+					}
 					this.page = this.pagesCount();
 					vm.$forceUpdate();
 				},
 				gotoBegin() {
+					if (!this) {
+						return 1;
+					}
 					this.page = 1;
 					vm.$forceUpdate();
 				},
 				gotoPage(page) {
+					if (!this) {
+						return 1;
+					}
 					this.page = page;
 					vm.$forceUpdate();
 				},
 				nextPage() {
+					if (!this) {
+						return 1;
+					}
 					if (this.page >= this.pagesCount()) {
 						return;
 					}
@@ -265,6 +289,9 @@ export default {
 					vm.$forceUpdate();
 				},
 				prevPage() {
+					if (!this) {
+						return 1;
+					}
 					if (this.page <= 1) {
 						return;
 					}
