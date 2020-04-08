@@ -419,7 +419,7 @@ export default {
 			if (!state) {
 				return;
 			}
-			console.log(state);
+			
 			state = JSON.parse(state);
 			this.pagination.page = state.pagination.page;
 			this.pagination.itemsPerPage = state.pagination.itemsPerPage;
