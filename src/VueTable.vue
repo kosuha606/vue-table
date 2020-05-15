@@ -2,16 +2,22 @@
 	<div class="vue-table">
 		<div v-for="template in templatesOrder">
 			<slot v-if="template === 'filters'" name="filter">
-				<div>
-					<h3>Фильтр</h3>
+				<div class="vue-table-filter">
+					<h3 v-if="filterComponents.length">Фильтр</h3>
 					<component
 							v-model="filters[component.field]"
-							:key="'mass_'+component.field"
+							:key="'mass_'+component.field+component.label"
 							:is="component.component"
+							:name="component.field"
 							:label="component.label"
 							:props="component.props"
 							v-for="component in filterComponents"
 					></component>
+					<div class="vue-table-filter-reset">
+						<button @click="resetFilter" v-if="filterComponents.length">
+							Сбросить
+						</button>
+					</div>
 				</div>
 			</slot>
 			<slot v-if="template === 'pagination'" name="pagination_top">
@@ -55,10 +61,10 @@
 			<slot v-if="template === 'mass_operations'" name="mass_operations">
 				<div>
 					<hr>
-					<h3>Операции</h3>
+					<h3 v-if="massOperationComponents.length">Операции</h3>
 					<component
 							:mass-operations="massOperations"
-							:key="'mass_'+component.field"
+							:key="'mass_'+component.field+component.label"
 							:is="component.component"
 							:props="component.props"
 							v-for="component in massOperationComponents"
@@ -95,7 +101,7 @@
 											v-if="component.massOperation"
 											@mass-select="onMassComponentSelect($event, component)"
 											@mass-unselect="onMassComponentUnselect($event, component)"
-											:key="index+'_'+component.field"
+											:key="index+'_'+component.field+component.label"
 											:mass-operations="massOperations"
 											:component="component"
 											:is="component.component"
@@ -105,11 +111,12 @@
 									></component>
 									<component
 											v-else
-											:key="index+'_'+component.field"
+											:key="index+'_'+component.field+component.label"
 											:is="component.component"
 											:field="component.field"
 											:props="component.props"
 											:item="item"
+											:value="item[component.field]"
 									></component>
 								</template>
 							</tr>
@@ -162,7 +169,7 @@ export default {
 	},
 	props: {
 		id: String,
-		syncUrl: String,
+		syncUrl: [String, Function],
 		paginationAppendMode: {
 			type: Boolean,
 			default: false,
@@ -228,12 +235,21 @@ export default {
 				total: 10,
 				appendMode: false,
 				getTotal() {
+					if (!this) {
+						return 1;
+					}
 					return vm.itemsTotal;
 				},
 				getOffsetBegin() {
+					if (!this) {
+						return 1;
+					}
 					return (this.page-1)*this.itemsPerPage;
 				},
 				getOffsetEnd() {
+					if (!this) {
+						return 1;
+					}
 					let possibleEnd = this.page*this.itemsPerPage;
 					if (possibleEnd > this.getTotal()) {
 						return this.getTotal();
@@ -242,21 +258,36 @@ export default {
 					return possibleEnd;
 				},
 				pagesCount() {
+					if (!this) {
+						return 1;
+					}
 					return Math.round((this.getTotal()/this.itemsPerPage)+0.5);
 				},
 				gotoEnd() {
+					if (!this) {
+						return 1;
+					}
 					this.page = this.pagesCount();
 					vm.$forceUpdate();
 				},
 				gotoBegin() {
+					if (!this) {
+						return 1;
+					}
 					this.page = 1;
 					vm.$forceUpdate();
 				},
 				gotoPage(page) {
+					if (!this) {
+						return 1;
+					}
 					this.page = page;
 					vm.$forceUpdate();
 				},
 				nextPage() {
+					if (!this) {
+						return 1;
+					}
 					if (this.page >= this.pagesCount()) {
 						return;
 					}
@@ -264,6 +295,9 @@ export default {
 					vm.$forceUpdate();
 				},
 				prevPage() {
+					if (!this) {
+						return 1;
+					}
 					if (this.page <= 1) {
 						return;
 					}
@@ -295,6 +329,10 @@ export default {
 		this.loadList();
 	},
 	methods: {
+		resetFilter() {
+			this.filters = {};
+			this.$forceUpdate();
+		},
 		onSort(field, direction) {
 			this.sort = {
 				field: field,
@@ -335,13 +373,23 @@ export default {
 			}
 
 			this.isLoading = true;
-			axios.post(this.syncUrl, this.listState).then((response) => {
+
+			let success = (response) => {
 				this.items = response.data.items;
 				this.isLoading = false;
 				this.itemsTotal = response.data.total;
 				this.$forceUpdate();
 				this.serializeStateToUrl();
-			}).catch((response) => {
+			};
+
+			if (typeof(this.syncUrl) === 'function') {
+				this.syncUrl(success, this.listState);
+				return;
+			}
+
+			axios.get(this.syncUrl, this.listState)
+				.then(success)
+				.catch((response) => {
 				this.isLoading = false;
 			});
 		},
@@ -381,7 +429,7 @@ export default {
 			if (!state) {
 				return;
 			}
-			console.log(state);
+
 			state = JSON.parse(state);
 			this.pagination.page = state.pagination.page;
 			this.pagination.itemsPerPage = state.pagination.itemsPerPage;
