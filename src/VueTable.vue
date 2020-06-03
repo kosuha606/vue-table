@@ -25,38 +25,38 @@
 					<button v-if="pagination.appendMode" @click="pagination.nextPage()" type="button">
 						Показать еще
 					</button>
-					<div v-else class="pagination-wrapper">
-						<ul class="pagination">
+					<div v-else class="pagination-wrapper row">
+						<ul class="pagination pull-left">
 							<li class="pagination-item">
-								<button @click="pagination.gotoBegin()" type="button">В начало</button>
+								<button class="btn btn-default" @click="pagination.gotoBegin()" type="button">В начало</button>
 							</li>
 							<li class="pagination-item">
-								<button @click="pagination.prevPage()" type="button">Назад</button>
+								<button class="btn btn-default" @click="pagination.prevPage()" type="button">Назад</button>
 							</li>
 							<li :class="{'pagination-item':1, 'pagination-item__active': page == pagination.page}" v-for="page in helpers.range(1, pagination.pagesCount())">
-								<button @click="pagination.gotoPage(page)" type="button">
+								<button class="btn btn-default" @click="pagination.gotoPage(page)" type="button">
 									{{ page }}
 								</button>
 							</li>
 							<li class="pagination-item">
-								<button @click="pagination.nextPage()" type="button">Вперед</button>
+								<button class="btn btn-default" @click="pagination.nextPage()" type="button">Вперед</button>
 							</li>
 							<li class="pagination-item">
-								<button @click="pagination.gotoEnd()" type="button">В конец</button>
+								<button class="btn btn-default" @click="pagination.gotoEnd()" type="button">В конец</button>
 							</li>
 						</ul>
-						<div class="items-per-page">
-							<select v-model="pagination.itemsPerPage">
+						<div class="items-per-page pull-right">
+							<select class="form-control" v-model="pagination.itemsPerPage">
 								<option
-									:selected="variant==pagination.itemsPerPage"
-									v-for="variant in pagination.itemsPerPageVariants"
-									:value="variant">
+										:selected="variant==pagination.itemsPerPage"
+										v-for="variant in pagination.itemsPerPageVariants"
+										:value="variant">
 									{{ variant }}
 								</option>
 							</select>
 						</div>
 					</div>
-				</div>			
+				</div>
 			</slot>
 			<slot v-if="template === 'mass_operations'" name="mass_operations">
 				<div>
@@ -69,7 +69,7 @@
 							:props="component.props"
 							v-for="component in massOperationComponents"
 					></component>
-				</div>			
+				</div>
 			</slot>
 			<slot v-if="template === 'list'" name="list">
 				<div>
@@ -80,49 +80,49 @@
 						{{ pagination.page }}
 						из {{ pagination.pagesCount() }} стр.
 					</div>
-					<table :class="{'table': 1, 'table-loading': isLoading}">
+					<table :class="{'table table-striped table-bordered': 1, 'table-loading': isLoading}">
 						<thead>
-							<tr>
-								<th
+						<tr>
+							<th
 									:width="component.attrs ? component.attrs.width : ''"
 									v-for="component in cellComponents">
-									{{ component.label }}
-									<div v-if="component.field" class="table-sort">
-										<button :class="{'table-sort-active': (sort.field == component.field) && (sort.direction == 'desc')}" @click="onSort(component.field, 'desc')" type="button">&uarr;</button>
-										<button :class="{'table-sort-active': (sort.field == component.field) && (sort.direction == 'asc')}" @click="onSort(component.field, 'asc')" type="button">&darr;</button>
-									</div>
-								</th>
-							</tr>
+								{{ component.label }}
+								<div v-if="component.field" class="table-sort">
+									<button :class="{'btn btn-default': 1, 'table-sort-active': (sort.field == component.field) && (sort.direction == 'desc')}" @click="onSort(component.field, 'desc')" type="button">&uarr;</button>
+									<button :class="{'btn btn-default': 1, 'table-sort-active': (sort.field == component.field) && (sort.direction == 'asc')}" @click="onSort(component.field, 'asc')" type="button">&darr;</button>
+								</div>
+							</th>
+						</tr>
 						</thead>
 						<tbody>
-							<tr v-for="(item, index) in items">
-								<template v-for="component in cellComponents">
-									<component
-											v-if="component.massOperation"
-											@mass-select="onMassComponentSelect($event, component)"
-											@mass-unselect="onMassComponentUnselect($event, component)"
-											:key="index+'_'+component.field+component.label"
-											:mass-operations="massOperations"
-											:component="component"
-											:is="component.component"
-											:field="component.field"
-											:props="component.props"
-											:item="item"
-									></component>
-									<component
-											v-else
-											:key="index+'_'+component.field+component.label"
-											:is="component.component"
-											:field="component.field"
-											:props="component.props"
-											:item="item"
-											:value="item[component.field]"
-									></component>
-								</template>
-							</tr>
+						<tr v-for="(item, index) in items">
+							<template v-for="component in cellComponents">
+								<component
+										v-if="component.massOperation"
+										@mass-select="onMassComponentSelect($event, component)"
+										@mass-unselect="onMassComponentUnselect($event, component)"
+										:key="index+'_'+component.field+component.label"
+										:mass-operations="massOperations"
+										:component="component"
+										:is="component.component"
+										:field="component.field"
+										:props="component.props"
+										:item="item"
+								></component>
+								<component
+										v-else
+										:key="index+'_'+component.field+component.label"
+										:is="component.component"
+										:field="component.field"
+										:props="component.props"
+										:item="item"
+										:value="item[component.field]"
+								></component>
+							</template>
+						</tr>
 						</tbody>
 					</table>
-				</div>			
+				</div>
 			</slot>
 		</div>
 	</div>

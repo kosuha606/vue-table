@@ -1,16 +1,42 @@
 {
-  "name": "vue_table",
-  "version": "1.0.1",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "watch": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "hot": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "production": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  "_args": [
+    [
+      "vue-component-table@1.0.0",
+      "C:\\Users\\kosuha\\code\\repos\\yii2-shop\\basic\\web\\srcadmin"
+    ]
+  ],
+  "_from": "vue-component-table@1.0.0",
+  "_id": "vue-component-table@1.0.0",
+  "_inBundle": false,
+  "_integrity": "sha512-5yTDlH2glb2KTSmz4XBUdisaZa54d+1YjF0nsVKX2WaVJo85CsnbkGqtJuxvxYiFMATE5i91YDfTWSeKNjSCsQ==",
+  "_location": "/vue-component-table",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "vue-component-table@1.0.0",
+    "name": "vue-component-table",
+    "escapedName": "vue-component-table",
+    "rawSpec": "1.0.0",
+    "saveSpec": null,
+    "fetchSpec": "1.0.0"
   },
-  "author": "",
-  "license": "ISC",
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/vue-component-table/-/vue-component-table-1.0.0.tgz",
+  "_spec": "1.0.0",
+  "_where": "C:\\Users\\kosuha\\code\\repos\\yii2-shop\\basic\\web\\srcadmin",
+  "author": {
+    "name": "Eugene Koushin"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "laravel-mix": "^5.0.4",
+    "vue": "^2.6.11",
+    "vue-cookie": "^1.1.4"
+  },
+  "description": "It is a vue library for table rendering and filtering and paginating, and some other features.",
   "devDependencies": {
     "cross-env": "^6.0.3",
     "node-sass": "^4.13.0",
@@ -18,10 +44,19 @@
     "sass-loader": "^8.0.2",
     "vue-template-compiler": "^2.6.10"
   },
-  "dependencies": {
-    "axios": "^0.19.2",
-    "laravel-mix": "^5.0.4",
-    "vue": "^2.6.11",
-    "vue-cookie": "^1.1.4"
-  }
+  "homepage": "https://github.com/kosuha606/vue-table",
+  "keywords": [
+    "vue",
+    "table"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "vue-component-table",
+  "scripts": {
+    "dev": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "hot": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "production": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "node node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "version": "1.0.1"
 }
