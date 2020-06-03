@@ -194,6 +194,10 @@ export default {
 			type: Array,
 			default: () => {return [];}
 		},
+		defaultSort: {
+			type: Object,
+			default: () => { return {field: 'id', direction: 'asc'}; }
+		},
 		templatesOrder: {
 			type: Array,
 			default: () => {
@@ -322,6 +326,7 @@ export default {
 		},
 	},
 	mounted() {
+		this.sort = this.defaultSort;
 		this.pagination.itemsPerPage = this.itemsPerPage;
 		this.pagination.itemsPerPageVariants = this.itemsPerPageVariants;
 		this.pagination.appendMode = this.paginationAppendMode;
